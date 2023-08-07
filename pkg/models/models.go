@@ -38,13 +38,18 @@ func init() {
 }
 
 func (p *Project) CreateProject() *Project {
-	db.Create(&p)
+	db.Create(p)
+	if p.Tasks != nil {
+		for i := range p.Tasks {
+			p.Tasks[i].ProjectID = p.ID
+			p.Tasks[i].CreateTask()
+		}
+	}
 	return p
 }
-
 func GetAllProjects() []Project {
 	var Projects []Project
-	db.Find(&Projects)
+	db.Preload("Tasks").Find(&Projects)
 	return Projects
 }
 
@@ -54,12 +59,13 @@ func GetProjectById(id int64) (*Project, *gorm.DB) {
 	if db.Error != nil {
 		return nil, db
 	}
+	getProject.Tasks, _ = GetAllTasks(uint(id))
 	return &getProject, db
 }
 
 func DeleteProject(id int64) *Project {
 	var project Project
-	db.Where("ID=?", id).Delete(project)
+	db.Where("ID=?", id).Delete(&project)
 	if db.Error != nil {
 		return nil
 	}
@@ -73,12 +79,7 @@ func (t *Task) CreateTask() *Task {
 
 func GetAllTasks(projectId uint) ([]Task, error) {
 	var tasks []Task
-	var project Project
-	res := db.Preload("Tasks").Find(&Project{}, "project_id = ?", projectId)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tasks = project.Tasks
+	db.Where("project_id = ?", projectId).Find(&tasks)
 	return tasks, nil
 }
 
@@ -94,7 +95,7 @@ func GetTaskById(projectId uint, taskId uint) (*Task, *gorm.DB) {
 
 func DeleteTask(projectId uint, taskId uint) (*Task, error) {
 	var task Task
-	result := db.Where("ID = ? AND project_id = ?", taskId, projectId).Delete(task)
+	result := db.Where("ID = ? AND project_id = ?", taskId, projectId).Delete(&task)
 	if result.Error != nil {
 		return nil, result.Error
 	}

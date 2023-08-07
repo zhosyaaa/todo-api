@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-// /projects/{title}/tasks
-
 func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
@@ -31,8 +29,6 @@ func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// /projects/{title}/tasks
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -54,8 +50,6 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// /projects/{title}/tasks/{id:[0-9]+}
 
 func GetTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -79,8 +73,6 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-// /projects/{title}/tasks/{id:[0-9]+}
-
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var updateTask = &models.Task{}
 	_ = utils.ParseBody(r, updateTask)
@@ -98,7 +90,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid taskID", http.StatusBadRequest)
 	}
 	task, db := models.GetTaskById(uint(id), uint(taskId))
-	if updateTask.Title == "" {
+	if updateTask.Title != "" {
 		task.Title = updateTask.Title
 	}
 	if updateTask.Deadline != nil {
@@ -114,8 +106,6 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// "/projects/{title}/tasks/{id:[0-9]+}"
 
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -143,8 +133,6 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-// "/projects/{title}/tasks/{id:[0-9]+}/complete"
-
 func CompleteTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
@@ -167,8 +155,6 @@ func CompleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// "/projects/{title}/tasks/{id:[0-9]+}/complete"
 
 func UndoTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

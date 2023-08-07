@@ -5,6 +5,6 @@ createdb:
 	docker exec -it postgres15 createdb --username=postgres --owner=postgres todoapi
 
 dropdb:
-	docker exec -it postgres15 dropdb todoapi
+	docker exec -it postgres15 dropdb -U postgres todoapi
 
 .PHONY: postgres createdb dropdb

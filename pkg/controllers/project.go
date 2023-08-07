@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-// /projects/{title} +
-
 func GetProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID := vars["projectId"]
@@ -28,19 +26,19 @@ func GetProject(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-// /projects +
-
 func CreateProject(w http.ResponseWriter, r *http.Request) {
 	createProject := &models.Project{}
-	_ = utils.ParseBody(r, createProject)
-	b := createProject.CreateProject()
-	res, _ := json.Marshal(b)
+	err := utils.ParseBody(r, createProject)
+	if err != nil {
+		http.Error(w, "Invalid request data", http.StatusBadRequest)
+		return
+	}
+	project := createProject.CreateProject()
+	res, _ := json.Marshal(project)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) // Use StatusCreated for successful resource creation
 	w.Write(res)
 }
-
-// /projects/{title} +
 
 func DeleteProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -57,8 +55,6 @@ func DeleteProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// /projects/{title} +
 
 func UpdateProject(w http.ResponseWriter, r *http.Request) {
 	var updateProject = &models.Project{}
@@ -84,8 +80,6 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
-
-// /projects +
 
 func GetAllProjects(w http.ResponseWriter, _ *http.Request) {
 	allProjects := models.GetAllProjects()

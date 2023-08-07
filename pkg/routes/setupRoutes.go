@@ -6,16 +6,16 @@ import (
 )
 
 var SetupRoutes = func(router *mux.Router) {
-	router.HandleFunc("/projects", GetAllProjects).Methods("GET")     // +
-	router.HandleFunc("/projects", CreateProject).Methods("POST")     // +
-	router.HandleFunc("/projects/{title}", GetProject).Methods("GET") // -
-	router.HandleFunc("/projects/{title}", UpdateProject).Methods("PUT")
-	router.HandleFunc("/projects/{title}", DeleteProject).Methods("DELETE")
-	router.HandleFunc("/projects/{title}/tasks", GetAllTasks).Methods("GET")
-	router.HandleFunc("/projects/{title}/tasks", CreateTask).Methods("POST")
-	router.HandleFunc("/projects/{title}/tasks/{id:[0-9]+}", GetTask).Methods("GET")
-	router.HandleFunc("/projects/{title}/tasks/{id:[0-9]+}", UpdateTask).Methods("PUT")
-	router.HandleFunc("/projects/{title}/tasks/{id:[0-9]+}", DeleteTask).Methods("DELETE")
-	router.HandleFunc("/projects/{title}/tasks/{id:[0-9]+}/complete", CompleteTask).Methods("PUT")
-	router.HandleFunc("/projects/{title}/tasks/{id:[0-9]+}/complete", UndoTask).Methods("DELETE")
+	router.HandleFunc("/projects", GetAllProjects).Methods("GET")
+	router.HandleFunc("/projects", CreateProject).Methods("POST")
+	router.HandleFunc("/projects/{projectId:[0-9]+}", GetProject).Methods("GET")
+	router.HandleFunc("/projects/{projectId:[0-9]+}", UpdateProject).Methods("PUT")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks", GetAllTasks).Methods("GET")
+	router.HandleFunc("/projects/{projectId:[0-9]+}", DeleteProject).Methods("DELETE")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks", CreateTask).Methods("POST")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks/{id:[0-9]+}", GetTask).Methods("GET")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks/{id:[0-9]+}", UpdateTask).Methods("PUT")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks/{id:[0-9]+}", DeleteTask).Methods("DELETE")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks/{id:[0-9]+}/complete", CompleteTask).Methods("PUT")
+	router.HandleFunc("/projects/{projectId:[0-9]+}/tasks/{id:[0-9]+}/complete", UndoTask).Methods("DELETE")
 }
