@@ -1,7 +1,9 @@
 package configs
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"log"
 )
 
 var (
@@ -9,12 +11,12 @@ var (
 )
 
 func ConnectDB() {
-	dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
-	b, err := gorm.Open("postgres", dsn)
+	dsn := "host=localhost user=postgres password=1079 dbname=todoapi port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	d, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("Could not connect database: %v", err)
 	}
-	db = b
+	db = d
 }
 
 func GetDB() *gorm.DB {

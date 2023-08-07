@@ -11,6 +11,7 @@ import (
 )
 
 // /projects/{title}/tasks
+
 func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectId := vars["projectId"]
@@ -19,15 +20,10 @@ func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error while parsing GetAllTasks func")
 		http.Error(w, "Invalid projectId", http.StatusBadRequest)
 	}
-	project, db := models.GetProjectById(ID)
-	if project == nil {
-		fmt.Println("error while find project in GetAllTasks fun")
-		http.Error(w, "Project not found", http.StatusNotFound)
-		return
-	}
-	tasks := []models.Task{}
-	if err := db.Model(&project).Related(&tasks).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	tasks, err := models.GetAllTasks(uint(ID))
+	if err != nil {
+		fmt.Println("error while getting tasks for the project")
+		http.Error(w, "Error while getting tasks", http.StatusInternalServerError)
 		return
 	}
 	res, _ := json.Marshal(tasks)
@@ -35,6 +31,8 @@ func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
+
+// /projects/{title}/tasks
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -45,7 +43,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid projectId", http.StatusBadRequest)
 	}
 	task := models.Task{ProjectID: uint(id)}
-	utils.ParseBody(r, task)
+	_ = utils.ParseBody(r, task)
 	b := task.CreateTask()
 	res, err := json.Marshal(b)
 	if err != nil {
@@ -58,16 +56,23 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // /projects/{title}/tasks/{id:[0-9]+}
-// надо изменить и найти айди проекта а то айди просто не робит
+
 func GetTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	taskId := vars["id"]
-	id, err := strconv.ParseInt(taskId, 0, 0)
+	projectId := vars["projectId"]
+	taskID := vars["id"]
+	id, err := strconv.ParseInt(projectId, 0, 0)
 	if err != nil {
-		fmt.Println("error while parsing GetTask func")
+		fmt.Println("error while parsing projectID GetTask func")
 		http.Error(w, "Invalid projectId", http.StatusBadRequest)
 	}
-	task, _ := models.GetTaskById(id)
+	taskId, err := strconv.ParseInt(taskID, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing taskID GetTask func")
+		http.Error(w, "Invalid taskID", http.StatusBadRequest)
+	}
+
+	task, _ := models.GetTaskById(uint(id), uint(taskId))
 	res, _ := json.Marshal(task)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -75,28 +80,32 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // /projects/{title}/tasks/{id:[0-9]+}
-// надо изменить и найти айди проекта а то айди просто не робит
+
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var updateTask = &models.Task{}
-	utils.ParseBody(r, updateTask)
+	_ = utils.ParseBody(r, updateTask)
 	vars := mux.Vars(r)
-	taskId := vars["id"]
-	id, err := strconv.ParseInt(taskId, 0, 0)
+	projectId := vars["projectId"]
+	taskID := vars["id"]
+	id, err := strconv.ParseInt(projectId, 0, 0)
 	if err != nil {
-		fmt.Println("error while parsing UpdateTask func")
-		http.Error(w, "Invalid TaskId", http.StatusBadRequest)
+		fmt.Println("error while parsing projectID UpdateTask func")
+		http.Error(w, "Invalid projectId", http.StatusBadRequest)
 	}
-	task, db := models.GetTaskById(id)
+	taskId, err := strconv.ParseInt(taskID, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing taskID UpdateTask func")
+		http.Error(w, "Invalid taskID", http.StatusBadRequest)
+	}
+	task, db := models.GetTaskById(uint(id), uint(taskId))
 	if updateTask.Title == "" {
 		task.Title = updateTask.Title
 	}
-	if updateTask.Deadline == nil {
+	if updateTask.Deadline != nil {
 		task.Deadline = updateTask.Deadline
 	}
-	if !updateTask.Done {
-		task.Done = updateTask.Done
-	}
-	if updateTask.ProjectID < 0 {
+	task.Done = updateTask.Done
+	if updateTask.ProjectID >= 0 {
 		task.ProjectID = updateTask.ProjectID
 	}
 	db.Save(&task)
@@ -106,12 +115,80 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func DeleteTask(http.ResponseWriter, *http.Request) {
+// "/projects/{title}/tasks/{id:[0-9]+}"
 
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+	taskID := vars["id"]
+	id, err := strconv.ParseInt(projectId, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing projectID DeleteTask func")
+		http.Error(w, "Invalid projectId", http.StatusBadRequest)
+	}
+	taskId, err := strconv.ParseInt(taskID, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing taskID DeleteTask func")
+		http.Error(w, "Invalid taskID", http.StatusBadRequest)
+	}
+	task, err := models.DeleteTask(uint(id), uint(taskId))
+	if err != nil {
+		fmt.Println("error while deleting the task")
+		http.Error(w, "Error while deleting the task", http.StatusInternalServerError)
+		return
+	}
+	res, _ := json.Marshal(task)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }
-func CompleteTask(http.ResponseWriter, *http.Request) {
 
+// "/projects/{title}/tasks/{id:[0-9]+}/complete"
+
+func CompleteTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+	taskID := vars["id"]
+	id, err := strconv.ParseInt(projectId, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing projectID CompleteTask func")
+		http.Error(w, "Invalid projectId", http.StatusBadRequest)
+	}
+	taskId, err := strconv.ParseInt(taskID, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing taskID CompleteTask func")
+		http.Error(w, "Invalid taskID", http.StatusBadRequest)
+	}
+	task, db := models.GetTaskById(uint(id), uint(taskId))
+	task.Undo()
+	db.Save(task)
+	res, _ := json.Marshal(task)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }
-func UndoTask(http.ResponseWriter, *http.Request) {
 
+// "/projects/{title}/tasks/{id:[0-9]+}/complete"
+
+func UndoTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+	taskID := vars["id"]
+	id, err := strconv.ParseInt(projectId, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing projectID UndoTask func")
+		http.Error(w, "Invalid projectId", http.StatusBadRequest)
+	}
+	taskId, err := strconv.ParseInt(taskID, 0, 0)
+	if err != nil {
+		fmt.Println("error while parsing taskID UndoTask func")
+		http.Error(w, "Invalid taskID", http.StatusBadRequest)
+	}
+	task, db := models.GetTaskById(uint(id), uint(taskId))
+	task.Complete()
+	db.Save(task)
+	res, _ := json.Marshal(task)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }

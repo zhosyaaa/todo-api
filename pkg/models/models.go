@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
+	"fmt"
 	"github.com/zhosyaaa/todo-api/pkg/configs"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -33,17 +34,10 @@ func (t *Task) Undo() {
 func init() {
 	configs.ConnectDB()
 	db = configs.GetDB()
-	db = DBMigrate(db)
-}
-
-func DBMigrate(db *gorm.DB) *gorm.DB {
 	db.AutoMigrate(&Project{}, &Task{})
-	db.Model(&Task{}).AddForeignKey("project_id", "projects(id)", "CASCADE", "CASCADE")
-	return db
 }
 
 func (p *Project) CreateProject() *Project {
-	db.NewRecord(p)
 	db.Create(&p)
 	return p
 }
@@ -53,35 +47,59 @@ func GetAllProjects() []Project {
 	db.Find(&Projects)
 	return Projects
 }
+
 func GetProjectById(id int64) (*Project, *gorm.DB) {
 	var getProject Project
 	db := db.Where("ID=?", id).Find(&getProject)
+	if db.Error != nil {
+		return nil, db
+	}
 	return &getProject, db
 }
-func DeleteProject(id int64) Project {
+
+func DeleteProject(id int64) *Project {
 	var project Project
 	db.Where("ID=?", id).Delete(project)
-	return project
+	if db.Error != nil {
+		return nil
+	}
+	return &project
 }
 
 func (t *Task) CreateTask() *Task {
-	db.NewRecord(t)
 	db.Create(&t)
 	return t
 }
 
-func GetAllTasks() []Task {
-	var Tasks []Task
-	db.Find(&Tasks)
-	return Tasks
+func GetAllTasks(projectId uint) ([]Task, error) {
+	var tasks []Task
+	var project Project
+	res := db.Preload("Tasks").Find(&Project{}, "project_id = ?", projectId)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tasks = project.Tasks
+	return tasks, nil
 }
-func GetTaskById(id int64) (*Task, *gorm.DB) {
+
+func GetTaskById(projectId uint, taskId uint) (*Task, *gorm.DB) {
 	var getTask Task
-	db := db.Where("ID=?", id).Find(&getTask)
+	result := db.Where("ID = ? AND project_id = ?", taskId, projectId).First(&getTask)
+	if result.Error != nil {
+		return nil, db
+	}
+
 	return &getTask, db
 }
-func DeleteTask(id int64) Task {
+
+func DeleteTask(projectId uint, taskId uint) (*Task, error) {
 	var task Task
-	db.Where("ID=?", id).Delete(task)
-	return task
+	result := db.Where("ID = ? AND project_id = ?", taskId, projectId).Delete(task)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("task not found")
+	}
+	return &task, nil
 }

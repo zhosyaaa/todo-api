@@ -6,9 +6,9 @@ import (
 )
 
 var SetupRoutes = func(router *mux.Router) {
-	router.HandleFunc("/projects", GetAllProjects).Methods("GET")
-	router.HandleFunc("/projects", CreateProject).Methods("POST")
-	router.HandleFunc("/projects/{title}", GetProject).Methods("GET")
+	router.HandleFunc("/projects", GetAllProjects).Methods("GET")     // +
+	router.HandleFunc("/projects", CreateProject).Methods("POST")     // +
+	router.HandleFunc("/projects/{title}", GetProject).Methods("GET") // -
 	router.HandleFunc("/projects/{title}", UpdateProject).Methods("PUT")
 	router.HandleFunc("/projects/{title}", DeleteProject).Methods("DELETE")
 	router.HandleFunc("/projects/{title}/tasks", GetAllTasks).Methods("GET")
