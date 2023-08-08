@@ -9,7 +9,7 @@ It is a just simple tutorial or example for making simple RESTful API with Go us
 go get github.com/zhosyaaa/todo-api
 ```
 
-Before running API server, you should set the database config with yours or set the your database config with my values on [app.go](https://github.com/zhosyaaa/todoApi/pkq/config/app.go)
+Before running API server, you should set the database config with yours or set the your database config with my values on [app.go](https://github.com/zhosyaaa/todoApi/pkq/configs/app.go)
 ```go
 dsn := "host=localhost user=yourUser password=password dbname=name port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 
